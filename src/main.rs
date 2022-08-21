@@ -31,6 +31,10 @@ fn color(r: &Ray) -> Vec3
     {
         return Vec3::new(0.0, 1.0, 0.0)
     }
+    if hit_sphere(Vec3::new(-0.5, 0.2, -0.9), 0.5, r)
+    {
+        return Vec3::new(0.0, 1.0, 0.0)
+    }
     let unit_direction = Vec3::unit_vector(&r.direction());
     let t : f32 = 0.5 * (unit_direction.y() + 1.0);
 
