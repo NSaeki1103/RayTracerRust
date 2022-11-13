@@ -1,47 +1,29 @@
 mod vec3;
 mod ray;
+mod hittable;
+mod sphere;
+mod hittablelist;
 
+use hittablelist::HittableList;
 use vec3::Vec3;
+use sphere::Sphere;
 use ray::Ray;
+use hittable::{HitRecord, Hittable}; 
 
-fn hit_sphere
-(
-    center : Vec3,
-    radius : f32,
-    r : &Ray
-) -> f32
+fn color(r: &Ray, world: &HittableList) -> Vec3
 {
-    let oc = r.origin() - center;
-    let a = Vec3::dot(&r.direction(), r.direction());
-    let b = 2.0 * Vec3::dot(&oc, r.direction());
-    let c = Vec3::dot(&oc, oc) - radius * radius;
-
-    let discriminant = b * b - 4.0 * a * c;
-
-    if discriminant < 0.0
+    let mut rec = HitRecord::default();  
+    if world.hit(&r, 0.0, std::f32::MAX, &mut rec)
     {
-        return -1.0;
+        return 0.5 * Vec3::new(rec.normal.x() + 1.0, rec.normal.y() + 1.0, rec.normal.z() + 1.0)
     }
     else
     {
-        return (-b-discriminant.sqrt()) / 2.0 * a;
-    }
-
-
-}
-fn color(r: &Ray) -> Vec3
-{
-
-    let t = hit_sphere(Vec3::new(0.0, 0.0, -1.0), 0.5, r);
-    if t >= 0.0
-    {
-        let N = Vec3::unit_vector(&(r.point_at_parameter(t)-Vec3::new(0.0, 0.0, -1.0)));
-        return 0.5 * Vec3::new(N.x() + 1.0, N.y() + 1.0, N.z() + 1.0);
-    }
     let unit_direction = Vec3::unit_vector(&r.direction());
     let t : f32 = 0.5 * (unit_direction.y() + 1.0);
-
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
+    }
+
 }
 fn main()
 {
@@ -54,7 +36,10 @@ fn main()
     let vertical : Vec3 = Vec3::new(0.0, 2.0, 0.0);
     let origin : Vec3 = Vec3::new( 0.0, 0.0,0.0);
 
-
+    let mut list : Vec<Box<dyn Hittable>> = Vec::new();
+    list.push(Box::new(Sphere::sphere(Vec3::new(0.0, 0.0, -1.0),0.5)));
+    list.push(Box::new(Sphere::sphere(Vec3::new(0.0, -100.5, -1.0),100.0)));
+    let world = HittableList::new(list);
     println!("P3\n{} {}\n{}", width, height, MAXVALUE);
 
     for j in (0..height).rev()
@@ -64,7 +49,7 @@ fn main()
             let u: f32 = i as f32 / width as f32;
             let v: f32 = j as f32 / height as f32;
             let r: Ray = Ray::ray(origin, lower_left_corner + horizontal * u + vertical * v);
-            let col : Vec3 = color(&r);
+            let col : Vec3 = color(&r, &world);
             let b: f32 = 0.2;
 
             let ir: i32 =(255.99 * col.r()) as i32;
