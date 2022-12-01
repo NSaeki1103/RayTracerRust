@@ -3,19 +3,23 @@ mod ray;
 mod hittable;
 mod sphere;
 mod hittablelist;
+mod camera;
 
+use camera::Camera;
 use hittablelist::HittableList;
 use vec3::Vec3;
 use sphere::Sphere;
 use ray::Ray;
 use hittable::{HitRecord, Hittable}; 
+use rand::prelude::*;
 
 fn color(r: &Ray, world: &HittableList) -> Vec3
 {
     let mut rec = HitRecord::default();  
     if world.hit(&r, 0.0, std::f32::MAX, &mut rec)
     {
-        return 0.5 * Vec3::new(rec.normal.x() + 1.0, rec.normal.y() + 1.0, rec.normal.z() + 1.0)
+        let target = rec.p() + rec.normal() + random_in_unit_sphere();
+        return 0.5 * color(&Ray::ray(rec.p(), target - rec.p()), &world);
     }
     else
     {
@@ -25,32 +29,59 @@ fn color(r: &Ray, world: &HittableList) -> Vec3
     }
 
 }
+
+fn random_in_unit_sphere() -> Vec3
+{
+    let mut p = Vec3::default();
+    let mut rng = rand::thread_rng();
+
+    loop
+    {
+        p = 2.0 * Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
+        - Vec3::new(1.0, 1.0, 1.0);
+
+        if p.squared_length() < 1.0
+        {
+            return p;
+        }
+    }
+
+}
+
 fn main()
 {
     let width : i32 = 200;
-    let height : i32 = 100;
+    let height : i32 = 200;
+    let samples= 100;
     let MAXVALUE : i32 = 255;
 
-    let lower_left_corner : Vec3 = Vec3::new( -2.0, -1.0,-1.0);
-    let horizontal: Vec3 = Vec3::new(4.0, 0.0, 0.0);
-    let vertical : Vec3 = Vec3::new(0.0, 2.0, 0.0);
-    let origin : Vec3 = Vec3::new( 0.0, 0.0,0.0);
-
     let mut list : Vec<Box<dyn Hittable>> = Vec::new();
-    list.push(Box::new(Sphere::sphere(Vec3::new(0.0, 0.0, -1.0),0.5)));
+    list.push(Box::new(Sphere::sphere(Vec3::new(-1.0, 0.0, -1.0),0.5)));
+    list.push(Box::new(Sphere::sphere(Vec3::new(0.15, 0.0, -1.0),0.5)));
     list.push(Box::new(Sphere::sphere(Vec3::new(0.0, -100.5, -1.0),100.0)));
     let world = HittableList::new(list);
+
+    let cam = Camera::camera();
+    let mut rng = rand::thread_rng();
+
     println!("P3\n{} {}\n{}", width, height, MAXVALUE);
 
     for j in (0..height).rev()
     {
         for i in 0..width
         {
-            let u: f32 = i as f32 / width as f32;
-            let v: f32 = j as f32 / height as f32;
-            let r: Ray = Ray::ray(origin, lower_left_corner + horizontal * u + vertical * v);
-            let col : Vec3 = color(&r, &world);
-            let b: f32 = 0.2;
+            let mut col = Vec3::default();
+
+            for _ in 0..samples
+            {
+                let u: f32 = (i as f32 + rng.gen::<f32>()) / width as f32;
+                let v: f32 = (j as f32 + rng.gen::<f32>()) / height as f32;
+                let r = &cam.get_ray(u, v);
+                col = col + color(&r, &world);
+            }
+
+            col = col / samples as f32;
+            col = Vec3::new(col.r().sqrt(), col.g().sqrt(), col.b().sqrt());
 
             let ir: i32 =(255.99 * col.r()) as i32;
             let ig: i32 =(255.99 * col.g()) as i32;

@@ -24,10 +24,12 @@ impl Hittable for Sphere
     {
         let oc = r.origin() - self.center;
         let a = Vec3::dot(&r.direction(), r.direction());
-        let b = 2.0 * Vec3::dot(&oc, r.direction());
+        let b = Vec3::dot(&oc, r.direction());
         let c = Vec3::dot(&oc, oc) - self.radius * self.radius;
 
-        let discriminant = b * b - 4.0 * a * c;
+        //let discriminant = b * b - 4.0 * a * c;
+        //TODO: Why did I remove the four to make it work? 
+        let discriminant = b * b -  a * c;
         if  discriminant > 0.0
         {
             let temp = (-b - discriminant.sqrt()) / a;
