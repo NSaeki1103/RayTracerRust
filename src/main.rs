@@ -45,7 +45,7 @@ fn color(r: &Ray, world: &HittableList, depth: i32) -> Vec3
 fn main()
 {
     let width : i32 = 400;
-    let height : i32 = 400;
+    let height : i32 = 200;
     let samples= 100;
     let MAXVALUE : i32 = 255;
 
@@ -57,7 +57,7 @@ fn main()
         0.5,
         Material::Lambertian 
         {
-            albedo: Vec3::new(0.8, 0.3, 0.3),
+            albedo: Vec3::new(0.1, 0.2, 0.5),
        },
     )));
     list.push(Box::new(Sphere::sphere
@@ -81,10 +81,12 @@ fn main()
     (
         Vec3::new(-1.0, 0.0, -1.0),
         0.5,
-        Material::Metal {
-            albedo: Vec3::new(0.8, 0.8, 0.8),
-            fuzz: 0.3,
-        },
+        Material::Dielectric { ref_idx: 1.5 },
+    )));
+    list.push(Box::new(Sphere::sphere(
+        Vec3::new(-1.0, 0.0, -1.0),
+        -0.45,
+        Material::Dielectric { ref_idx: 1.5 },
     )));
 
     let world = HittableList::new(list);
