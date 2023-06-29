@@ -141,7 +141,7 @@ fn random_in_unit_sphere() -> Vec3
 
     loop
     {
-        p = 2.0 * Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
+        let p = 2.0 * Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>())
         - Vec3::new(1.0, 1.0, 1.0);
 
         if p.squared_length() < 1.0
