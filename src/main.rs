@@ -15,7 +15,8 @@ use hittable::Hittable;
 use material::{scatter, Material};
 
 use rand::prelude::*;
-
+use std::time;
+use std::io::Write;
 
 fn color(r: &Ray, world: &HittableList, depth: i32) -> Vec3 
 {
@@ -45,8 +46,8 @@ fn color(r: &Ray, world: &HittableList, depth: i32) -> Vec3
 fn main()
 {
     let mut rng = rand::thread_rng();
-    let width : i32 = 1600;
-    let height : i32 = 800;
+    let width : i32 = 100;
+    let height : u32 = 50;
     let samples= 100;
     let MAXVALUE : i32 = 255;
 
@@ -119,6 +120,10 @@ fn main()
     let dist_to_focus = 10.0;
     let apeture = 0.1;
 
+    let mut index : u32 = 0;
+    let mut finalPrintVal : u32 = 0;
+    let mut previousPrintVal : u32 = 1;
+
     let cam = Camera::camera
     (
         look_from,
@@ -129,7 +134,7 @@ fn main()
         apeture,
         dist_to_focus,
     );
-
+    let start = time::Instant::now();
     println!("P3\n{} {}\n{}", width, height, MAXVALUE);
 
     for j in (0..height).rev()
@@ -153,8 +158,20 @@ fn main()
             let ig: i32 =(255.99 * col.g()) as i32;
             let ib: i32 =(255.99 * col.b()) as i32;
 
-            println!("{} {} {}", ir, ig, ib);
+            //println!("{} {} {}", ir, ig, ib);
+        }
+
+        index = index + 1;
+        finalPrintVal = (index * 100) / height;
+        if previousPrintVal != finalPrintVal
+        {
+            let duration = time::Instant::now() - start;
+            print!("Status: {}% complete. Elapsed Time: {:?} seconds.\r", finalPrintVal, duration);
+            std::io::stdout().flush(); 
+            previousPrintVal = finalPrintVal;
         }
     }
 
+    let duration = time::Instant::now() - start;
+    println!("Image generation elapsed time: {:?}", duration);
 }
